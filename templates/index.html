@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User CRUD</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; }
+        input[type="text"], input[type="password"], input[type="checkbox"] { width: 100%; padding: 8px; box-sizing: border-box; }
+        button { padding: 10px 15px; background-color: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        .message { margin-top: 20px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
+        .message.success { background-color: #d4edda; color: #155724; }
+        .message.error { background-color: #f8d7da; color: #721c24; }
+        #userList { margin-top: 20px; }
+        #userList ul { list-style: none; padding: 0; }
+        #userList li { margin-bottom: 10px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>User CRUD Application</h1>
+
+        <!-- Create User Form -->
+        <h2>Create User</h2>
+        <form id="createForm">
+            <div class="form-group">
+                <label for="createUsername">Username:</label>
+                <input type="text" id="createUsername" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="createPassword">Password:</label>
+                <input type="password" id="createPassword" name="password" required>
+            </div>
+            <div class="form-group">
+                <label for="createActive">Active:</label>
+                <input type="checkbox" id="createActive" name="active">
+            </div>
+            <button type="submit">Create User</button>
+        </form>
+
+        <!-- Update User Form -->
+        <h2>Update User</h2>
+        <form id="updateForm">
+            <div class="form-group">
+                <label for="updateUsername">Username:</label>
+                <input type="text" id="updateUsername" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="updatePassword">New Password:</label>
+                <input type="password" id="updatePassword" name="password">
+            </div>
+            <div class="form-group">
+                <label for="updateActive">Active:</label>
+                <input type="checkbox" id="updateActive" name="active">
+            </div>
+            <button type="submit">Update User</button>
+        </form>
+
+        <!-- Delete User Form -->
+        <h2>Delete User</h2>
+        <form id="deleteForm">
+            <div class="form-group">
+                <label for="deleteUsername">Username:</label>
+                <input type="text" id="deleteUsername" name="username" required>
+            </div>
+            <button type="submit">Delete User</button>
+        </form>
+
+        <!-- Message Display -->
+        <div class="message" id="message"></div>
+
+        <!-- User List -->
+        <h2>Users</h2>
+        <div id="userList">
+            <ul id="userListUl"></ul>
+        </div>
+    </div>
+
+    <script>
+        function displayMessage(message, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = message;
+            messageDiv.className = `message ${type}`;
+        }
+
+        function fetchUsers() {
+            fetch('/users')
+                .then(response => response.json())
+                .then(data => {
+                    const userListUl = document.getElementById('userListUl');
+                    userListUl.innerHTML = '';
+                    data.forEach(user => {
+                        const li = document.createElement('li');
+                        li.textContent = `Username: ${user.username}, Active: ${user.active}`;
+                        userListUl.appendChild(li);
+                    });
+                })
+                .catch(error => {
+                    displayMessage('Error fetching user list.', 'error');
+                });
+        }
+
+        document.getElementById('createForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const username = document.getElementById('createUsername').value;
+            const password = document.getElementById('createPassword').value;
+            const active = document.getElementById('createActive').checked;
+
+            fetch('/users', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password, active })
+            })
+            .then(response => response.json())
+            .then(data => {
+                displayMessage('User created successfully!', 'success');
+                fetchUsers(); // Refresh user list
+            })
+            .catch(error => {
+                displayMessage('Error creating user.', 'error');
+            });
+        });
+
+        document.getElementById('updateForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const username = document.getElementById('updateUsername').value;
+            const password = document.getElementById('updatePassword').value;
+            const active = document.getElementById('updateActive').checked;
+
+            fetch(`/users/${username}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password, active })
+            })
+            .then(response => response.json())
+            .then(data => {
+                displayMessage('User updated successfully!', 'success');
+                fetchUsers(); // Refresh user list
+            })
+            .catch(error => {
+                displayMessage('Error updating user.', 'error');
+            });
+        });
+
+        document.getElementById('deleteForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const username = document.getElementById('deleteUsername').value;
+
+            fetch(`/users/${username}`, {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(data => {
+                displayMessage('User deleted successfully!', 'success');
+                fetchUsers(); // Refresh user list
+            })
+            .catch(error => {
+                displayMessage('Error deleting user.', 'error');
+            });
+        });
+
+        // Initial fetch of user list
+        fetchUsers();
+    </script>
+</body>
+</html>
